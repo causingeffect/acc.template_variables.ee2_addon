@@ -2,6 +2,7 @@ $(document).ready(function() {
 	// create tabs for custom field groups
 	$('#tabs').tabs();
 	
+	/*
 	// create rounded corners
 	$("a.copy").corner();
 	$("h3.section-heading").corner("8px tl tr");
@@ -10,7 +11,7 @@ $(document).ready(function() {
 	$(".globalVariableTable thead th:first-child").corner("8px tl");
 	$(".globalVariableTable thead th:last-child").corner("8px tr");
 	$("tfoot td").corner("8px bl br");
-	
+	*/
 	
 	// assign ZeroClipboard.swf path
 	// var is set in javascript code outside this file
