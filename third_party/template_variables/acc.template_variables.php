@@ -24,7 +24,8 @@ class Template_variables_acc {
 		$this->EE =& get_instance();
 		$this->EE->lang->loadfile('template_variables');
 		$this->_include_theme_css('template_variables');
-		$this->_include_theme_js('jquery-ui-1.8.2.tabs.min');
+		$this->_include_theme_js('jquery-ui-1.8.17.custom.min');
+		$this->_include_theme_js('jquery-corner-2.12.min');
 		$this->_include_theme_js('ZeroClipboard');
 		$this->_include_theme_js('template_variables');
 	}
