@@ -1,9 +1,13 @@
 $(document).ready(function() {
 	// create tabs for custom field groups
-	$('#tabs').tabs();
-	
-	/*
+
+	if ( $('#tabs').length > 0 )
+	{
+		$('#tabs').tabs();
+	}
+
 	// create rounded corners
+	/*
 	$("a.copy").corner();
 	$("h3.section-heading").corner("8px tl tr");
 	$(".snippetsTable thead th:first-child").corner("8px tl");
@@ -12,7 +16,7 @@ $(document).ready(function() {
 	$(".globalVariableTable thead th:last-child").corner("8px tr");
 	$("tfoot td").corner("8px bl br");
 	*/
-	
+
 	// assign ZeroClipboard.swf path
 	// var is set in javascript code outside this file
 	ZeroClipboard.setMoviePath(pathToZeroClipboardSwf);
@@ -26,7 +30,7 @@ $(document).ready(function() {
 		// set the clip text to our innerHTML
 		clip.setText($(this).children('span.copyText').html());
 		$(this).children('span.clipTip').children('span.clipText').html('Click to Copy');
-		
+
 		// reposition the movie over our element
 		// or create it if this is the first time
 		if (clip.div) {
@@ -40,7 +44,7 @@ $(document).ready(function() {
 		// are properly updated.
 		clip.receiveEvent('mouseover', null);
 	});
-	
+
 	//Add a complete event to let the user know the text was copied
 	clip.addEventListener('complete', function() {
 		$('span.clipText').html('Copied!');
