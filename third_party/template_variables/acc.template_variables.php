@@ -1,215 +1,277 @@
-<?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php  if ( !defined( 'BASEPATH' ) )
+{
+	exit( 'No direct script access allowed' );
+}
 /**
  * ExpressionEngine Template Variables Reference Accessory
  *
  * @package		ExpressionEngine
  * @subpackage	Control Panel
  * @category	Accessories
- * @author		Matthew Krivanek
- * @link		http://www.sherpawebstudios.com
+ * @author		Matthew Krivanek & Aaron Waldon
+ * @link		http://www.sherpawebstudios.com & http://www.causingeffect.com
  */
-class Template_variables_acc {
-	
-	var $name			= 'Template Variables';
-	var $id				= 'template_variables';
-	var $version		= '1.1';
-	var $description	= 'ExpressionEngine Custom Fields, Snippets and Global Variables';
-	var $sections		= array();
+class Template_variables_acc
+{
+	public $name = 'Template Variables';
+	public $id = 'template_variables';
+	public $version = '1.2';
+	public $description = 'Shows custom fields, snippets, and global variables';
+	public $sections = array();
 
 	/**
 	 * Constructor
 	 */
-	function Template_variables_acc()
+	public function __construct()
 	{
 		$this->EE =& get_instance();
-		$this->EE->lang->loadfile('template_variables');
-		$this->_include_theme_css('template_variables');
-		$this->_include_theme_js('jquery-ui-1.8.2.tabs.min');
-		$this->_include_theme_js('ZeroClipboard');
-		$this->_include_theme_js('template_variables');
+		$this->EE->lang->loadfile( 'template_variables' );
+		$this->include_styles_and_scripts();
 	}
-	
-	// --------------------------------------------------------------------
-	
+
 	/**
-	 * Set Sections
+	 * Old school constructor
 	 *
+	 * @return Template_variables_acc
+	 */
+	public function Template_variables_acc()
+	{
+		return $this->__construct();
+	}
+
+	/**
 	 * Set content for the accessory
 	 *
-	 * @access	public
 	 * @return	void
 	 */
-	function set_sections()
+	public function set_sections()
 	{
-		$variables = $this->_get_variable_data();
+		//add custom fields section
+		$data = array( 'field_groups' => $this->get_fields() );
+		$this->sections[ lang( 'custom_fields' ) ] = ( empty( $data[ 'field_groups' ] ) ) ? '<p>' . lang( 'no_custom_fields' ) . '</p>' : $this->EE->load->view( 'custom_fields', $data, TRUE );
 
-		if(empty($variables['field_groups']))
-		{
-			$this->sections[$this->EE->lang->line('custom_fields')] = 
-				'<p>'.$this->EE->lang->line('no_custom_fields').'</p>';
-		}
-		else
-		{
-			$this->sections[$this->EE->lang->line('custom_fields')] = 
-				$this->EE->load->view('custom_fields', $variables, TRUE);			
-		}
-		
-		if(empty($variables['snippets']))
-		{
-			$this->sections[$this->EE->lang->line('snippets')] = 
-				'<p>'.$this->EE->lang->line('no_snippets').'</p>';
-		}
-		else
-		{		
-			$this->sections[$this->EE->lang->line('snippets')] = 
-				$this->EE->load->view('snippets', $variables, TRUE);
-		}
+		//add snippets section
+		$data = array( 'snippets' => $this->get_snippets() );
+		$this->sections[ lang( 'snippets' ) ] = ( empty( $data[ 'snippets' ] ) ) ? '<p>' . lang( 'no_snippets' ) . '<br><a href="' . AMP . 'C=design' . AMP . 'M=snippets_edit">' . lang( 'create_new_snippet' ) . '</a></p>' : $this->EE->load->view( 'snippets', $data, TRUE );
 
-		if(empty($variables['global_variables']))
-		{
-			$this->sections[$this->EE->lang->line('global_variables')] = 
-				'<p>'.$this->EE->lang->line('no_global_variables').'</p>';
-		}
-		else
-		{		
-			$this->sections[$this->EE->lang->line('global_variables')] = 
-				$this->EE->load->view('global_variables', $variables, TRUE);
-		}		
+		//add global variables section
+		$data = array( 'global_variables' => $this->get_globals() );
+		$this->sections[ lang( 'global_variables' ) ] = ( empty( $data[ 'global_variables' ] ) ) ? '<p>' . lang( 'no_global_variables' ) . '<br><a href="' . BASE . AMP . 'C=design' . AMP . 'M=global_variables_create">' . lang( 'create_new_global_variable' ) . '</a></p>' :  $this->EE->load->view( 'global_variables', $data, TRUE );
 	}
 
-	// --------------------------------------------------------------------
-	
 	/**
-	 * Get Variable Data
-	 *
 	 * Get array of variables
 	 *
-	 * @access	private
-	 * @return	$variables
+	 * @return array
 	 */
-	function _get_variable_data()
+	protected function get_fields()
 	{
-		$variables = array();
-		
-		$site_id = $this->EE->config->item('site_id');
-		
-		$field_groups = $this->EE->db->query("SELECT group_id, group_name FROM exp_field_groups WHERE site_id=".$site_id." ORDER BY group_name");	
-		
-		if ($field_groups->num_rows() > 0)
-		{
-			$custom_fields = $this->EE->db->query("SELECT field_id, group_id, field_label, field_order, field_name, field_type FROM exp_channel_fields WHERE site_id=".$site_id." ORDER BY field_order");
-			
-			$i = 0; 
-			
-		    foreach($field_groups->result_array() as $field_group)
-		    {
-				$variables['field_groups'][] = array(
-													 'group_id' => $field_group['group_id'],
-													 'group_name' => $field_group['group_name'],
-													 'new_custom_field_link' => BASE.AMP.'C=admin_content'.AMP.'M=field_edit'.AMP.'group_id='.$field_group['group_id']
-													);
+		//the main variables array
+		$field_groups = array();
 
-				if ($custom_fields->num_rows() > 0)
+		/*
+		//query the field groups
+		$temp = $this->EE->db->query( 'SELECT group_id, group_name FROM exp_field_groups WHERE site_id=? ORDER BY group_name', array( $site_id ) );
+
+		//process the field groups
+		if ( $temp->num_rows() > 0 )
+		{
+			$custom_fields = $this->EE->db->query( 'SELECT field_id, group_id, field_label, field_order, field_name, field_type FROM exp_channel_fields WHERE site_id=? ORDER BY field_order', array( $site_id ) );
+
+			foreach ( $temp->result_array() as $index => $field_group )
+			{
+				$field_groups[] = array(
+					'group_id' => $field_group[ 'group_id' ],
+					'group_name' => $field_group[ 'group_name' ],
+					'new_custom_field_link' => BASE . AMP . 'C=admin_content' . AMP . 'M=field_edit' . AMP . 'group_id=' . $field_group[ 'group_id' ]
+				);
+
+				if ( $custom_fields->num_rows() > 0 )
 				{
-				    foreach($custom_fields->result_array() as $custom_field)
-				    {
-						if($custom_field['group_id'] == $field_group['group_id'])
+					foreach ( $custom_fields->result_array() as $custom_field )
+					{
+						if ( $custom_field[ 'group_id' ] == $field_group[ 'group_id' ] )
 						{
-					        $variables['field_groups'][$i]['custom_fields'][] = array(
-																  'field_id' => $custom_field['field_id'],
-																  'field_label' => $custom_field['field_label'], 
-																  'field_order' => $custom_field['field_order'], 
-																  'field_name' => $custom_field['field_name'], 
-																  'field_type' => $custom_field['field_type'],
-																  'field_link' => BASE.AMP.'C=admin_content'.AMP.'M=field_edit'.AMP.'field_id='.$custom_field['field_id'].AMP.'group_id='.$custom_field['group_id']
-																 );
+							$field_groups[ $index ][ 'custom_fields' ][] = array(
+								'field_id' => $custom_field[ 'field_id' ],
+								'field_label' => $custom_field[ 'field_label' ],
+								'field_order' => $custom_field[ 'field_order' ],
+								'field_name' => $custom_field[ 'field_name' ],
+								'field_type' => $custom_field[ 'field_type' ],
+								'field_link' => BASE . AMP . 'C=admin_content' . AMP . 'M=field_edit' . AMP . 'field_id=' . $custom_field[ 'field_id' ] . AMP . 'group_id=' . $custom_field[ 'group_id' ]
+							);
 						}
-				    }
+					}
 				}
-				$i++;
+			}
+		}
+		*/
+
+		//query the field groups
+		$temp = $this->EE->db->query( '
+			SELECT
+				fg.group_id,
+				fg.group_name,
+				cf.field_id,
+				cf.field_label,
+				cf.field_order,
+				cf.field_name,
+				cf.field_type
+			FROM
+				exp_field_groups fg
+			LEFT JOIN
+				exp_channel_fields cf
+			ON fg.group_id = cf.group_id
+			WHERE fg.site_id=?
+			ORDER BY cf.field_order, fg.group_name ASC', array( $this->EE->config->item( 'site_id' ) )
+		);
+
+		//process the field groups
+		if ( $temp->num_rows() > 0 )
+		{
+			$results = $temp->result_array();
+
+			foreach ( $results as $result )
+			{
+				if ( ! isset( $field_groups[ $result['group_id'] ] ) )
+				{
+					$field_groups[ $result['group_id'] ] = array(
+						'group_id' => $result[ 'group_id' ],
+						'group_name' => $result[ 'group_name' ],
+						'new_custom_field_link' => BASE . AMP . 'C=admin_content' . AMP . 'M=field_edit' . AMP . 'group_id=' . $result[ 'group_id' ],
+					);
+				}
+
+				if ( ! empty( $result[ 'field_id' ] ) )
+				{
+					$field_groups[ $result['group_id'] ]['custom_fields'][] = array(
+						'field_id' => $result[ 'field_id' ],
+						'field_label' => $result[ 'field_label' ],
+						'field_order' => $result[ 'field_order' ],
+						'field_name' => $result[ 'field_name' ],
+						'field_type' => $result[ 'field_type' ],
+						'field_link' => BASE . AMP . 'C=admin_content' . AMP . 'M=field_edit' . AMP . 'field_id=' . $result[ 'field_id' ] . AMP . 'group_id=' . $result[ 'group_id' ]
+
+					);
+				}
 			}
 		}
 
-		
-		$snippets = $this->EE->db->query("SELECT snippet_id, snippet_name FROM exp_snippets");
+		//reset the key values
+		$field_groups = array_merge( $field_groups );
 
-		if ($snippets->num_rows() > 0)
-		{
-		    foreach($snippets->result_array() as $row)
-		    {
-		        $variables['snippets'][] = array(
-												 'snippet_id' => $row['snippet_id'],
-												 'snippet_name' => $row['snippet_name'],
-												 'snippet_link' => BASE.AMP.'C=design'.AMP.'M=snippets_edit'.AMP.'snippet='.$row['snippet_name']
-												);
-		    }
-		}
-
-		$global_variables = $this->EE->db->query("SELECT variable_id, variable_name FROM exp_global_variables");
-
-		if ($global_variables->num_rows() > 0)
-		{
-		    foreach($global_variables->result_array() as $row)
-		    {
-		        $variables['global_variables'][] = array(
-														'variable_id' => $row['variable_id'], 
-														'variable_name' => $row['variable_name'],
-														'variable_link' => BASE.AMP.'C=design'.AMP.'M=global_variables_update'.AMP.'variable_id='.$row['variable_id']
-														);
-		    }
-		}
-
-		return $variables;
+		return $field_groups;
 	}
 
-	// --------------------------------------------------------------------	
-	
 	/**
-	 * Asset Includes
+	 * Get the snippets array.
 	 *
-	 * Private functions to set
-	 *
-	 * @access	private
-	 * @return	void
-	 *  
+	 * @return array
 	 */
-
-	// Credit to Brandon Kelly for this method.
-	private function _theme_url()
+	protected function get_snippets()
 	{
-		if (! isset($this->cache['theme_url']))
+		//initialize the snippet array
+		$snippets = array();
+
+		//query the snippets
+		$temp = $this->EE->db->query( 'SELECT snippet_id, snippet_name FROM exp_snippets' );
+
+		//process the snippets
+		if ( $temp->num_rows() > 0 )
 		{
-			$theme_folder_url = $this->EE->config->item('theme_folder_url');
-			if (substr($theme_folder_url, -1) != '/') $theme_folder_url .= '/';
-			$this->cache['theme_url'] = $theme_folder_url.'third_party/template_variables/';
+			foreach ( $temp->result_array() as $row )
+			{
+				$snippets[] = array(
+					'snippet_id' => $row[ 'snippet_id' ],
+					'snippet_name' => $row[ 'snippet_name' ],
+					'snippet_link' => BASE . AMP . 'C=design' . AMP . 'M=snippets_edit' . AMP . 'snippet=' . $row[ 'snippet_name' ]
+				);
+			}
 		}
 
-		return $this->cache['theme_url'];
+		//sort the snippets
+		usort( $snippets, array( $this, 'snippet_sort' ) );
+
+		return $snippets;
 	}
-	
- 	// Because ZeroClipboard requires an absolute path, we need to include 
-	// our JS and the ZeroClipboard.swf in the publicly accessible themes folder.
-	// So, load_package_js is out, include_theme_js is in!
-	private function _include_theme_js($file)
+
+	/**
+	 * Callback to sort the snippet array by name.
+	 *
+	 * @param $a The first item.
+	 * @param $b The second item.
+	 * @return int
+	 */
+	protected function snippet_sort( $a, $b )
 	{
-		// Need to set the path to the clipboard file
-		if($file == 'template_variables') 
+		return strcmp( $a['snippet_name'], $b['snippet_name'] );
+	}
+
+	/**
+	 * Gets the globals array.
+	 *
+	 * @return array
+	 */
+	protected function get_globals()
+	{
+		$global_variables = array();
+
+		//query the global variables
+		$temp = $this->EE->db->query( 'SELECT variable_id, variable_name FROM exp_global_variables' );
+
+		//process the global variables
+		if ( $temp->num_rows() > 0 )
 		{
-			$this->EE->cp->add_to_foot('<script type="text/javascript">pathToZeroClipboardSwf = "'.$this->_theme_url().'scripts/ZeroClipboard.swf";</script>');
+			foreach ( $temp->result_array() as $row )
+			{
+				$global_variables[] = array(
+					'variable_id' => $row[ 'variable_id' ],
+					'variable_name' => $row[ 'variable_name' ],
+					'variable_link' => BASE . AMP . 'C=design' . AMP . 'M=global_variables_update' . AMP . 'variable_id=' . $row[ 'variable_id' ]
+				);
+			}
 		}
-		
-		$this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$this->_theme_url().'scripts/'.$file.'.js"></script>');
+
+		//sort the snippets
+		usort( $global_variables, array( $this, 'globals_sort' ) );
+
+		return $global_variables;
 	}
-	
-	// Because we're including our JS files in the themes folder, this way as well. 
-	// Credit to Brandon Kelly for this method.
-	private function _include_theme_css($file)
+
+	/**
+	 * Callback to sort the globals array by name.
+	 *
+	 * @param $a The first item.
+	 * @param $b The second item.
+	 * @return int
+	 */
+	protected function globals_sort( $a, $b )
 	{
-		$this->EE->cp->add_to_head('<link rel="stylesheet" type="text/css" href="'.$this->_theme_url().'css/'.$file.'.css" />');
+		return strcmp( $a['variable_name'], $b['variable_name'] );
 	}
-	
+
+	/**
+	 * Setup the styles and scripts.
+	 */
+	protected function include_styles_and_scripts()
+	{
+		//load cp jquery files for the tabs functionality
+		$this->EE->cp->add_js_script( array( 'ui' => array( 'core', 'widget', 'tabs' ) ) );
+
+		//get the theme URL
+		$theme_url = rtrim( $this->EE->config->item( 'theme_folder_url' ), '/' ) . '/third_party/template_variables/';
+
+		//add the css to the header
+		$this->EE->cp->add_to_head( '<link rel="stylesheet" type="text/css" href="' . $theme_url . 'css/template_variables.css" />' );
+
+		//setup the js and add it to the footer
+$scripts = <<<EOT
+<script type="text/javascript" src="{$theme_url}scripts/ZeroClipboard.js"></script>
+<script type="text/javascript">pathToZeroClipboardSwf = "{$theme_url}scripts/ZeroClipboard.swf";</script>
+<script type="text/javascript" src="{$theme_url}scripts/template_variables.js"></script>
+EOT;
+		$this->EE->cp->add_to_foot( $scripts );
+	}
 }
-// END CLASS
-
 /* End of file acc.template_variables.php */
 /* Location: ./system/expressionengine/third_party/template_variables/acc.template_variables.php */
