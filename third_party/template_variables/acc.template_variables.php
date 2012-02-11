@@ -5,11 +5,13 @@
 /**
  * ExpressionEngine Template Variables Reference Accessory
  *
+ * Matthew Krivanek was the original author (http://www.sherpawebstudios.com)
+ *
  * @package		ExpressionEngine
  * @subpackage	Control Panel
  * @category	Accessories
- * @author		Matthew Krivanek & Aaron Waldon
- * @link		http://www.sherpawebstudios.com & http://www.causingeffect.com
+ * @author		Aaron Waldon
+ * @link		http://www.causingeffect.com
  */
 class Template_variables_acc
 {
@@ -52,7 +54,7 @@ class Template_variables_acc
 
 		//add snippets section
 		$data = array( 'snippets' => $this->get_snippets() );
-		$this->sections[ lang( 'snippets' ) ] = ( empty( $data[ 'snippets' ] ) ) ? '<p>' . lang( 'no_snippets' ) . '<br><a href="' . AMP . 'C=design' . AMP . 'M=snippets_edit">' . lang( 'create_new_snippet' ) . '</a></p>' : $this->EE->load->view( 'snippets', $data, TRUE );
+		$this->sections[ lang( 'snippets' ) ] = ( empty( $data[ 'snippets' ] ) ) ? '<p>' . lang( 'no_snippets' ) . '<br><a href="'. BASE . AMP . 'C=design' . AMP . 'M=snippets_edit">' . lang( 'create_new_snippet' ) . '</a></p>' : $this->EE->load->view( 'snippets', $data, TRUE );
 
 		//add global variables section
 		$data = array( 'global_variables' => $this->get_globals() );
@@ -68,44 +70,6 @@ class Template_variables_acc
 	{
 		//the main variables array
 		$field_groups = array();
-
-		/*
-		//query the field groups
-		$temp = $this->EE->db->query( 'SELECT group_id, group_name FROM exp_field_groups WHERE site_id=? ORDER BY group_name', array( $site_id ) );
-
-		//process the field groups
-		if ( $temp->num_rows() > 0 )
-		{
-			$custom_fields = $this->EE->db->query( 'SELECT field_id, group_id, field_label, field_order, field_name, field_type FROM exp_channel_fields WHERE site_id=? ORDER BY field_order', array( $site_id ) );
-
-			foreach ( $temp->result_array() as $index => $field_group )
-			{
-				$field_groups[] = array(
-					'group_id' => $field_group[ 'group_id' ],
-					'group_name' => $field_group[ 'group_name' ],
-					'new_custom_field_link' => BASE . AMP . 'C=admin_content' . AMP . 'M=field_edit' . AMP . 'group_id=' . $field_group[ 'group_id' ]
-				);
-
-				if ( $custom_fields->num_rows() > 0 )
-				{
-					foreach ( $custom_fields->result_array() as $custom_field )
-					{
-						if ( $custom_field[ 'group_id' ] == $field_group[ 'group_id' ] )
-						{
-							$field_groups[ $index ][ 'custom_fields' ][] = array(
-								'field_id' => $custom_field[ 'field_id' ],
-								'field_label' => $custom_field[ 'field_label' ],
-								'field_order' => $custom_field[ 'field_order' ],
-								'field_name' => $custom_field[ 'field_name' ],
-								'field_type' => $custom_field[ 'field_type' ],
-								'field_link' => BASE . AMP . 'C=admin_content' . AMP . 'M=field_edit' . AMP . 'field_id=' . $custom_field[ 'field_id' ] . AMP . 'group_id=' . $custom_field[ 'group_id' ]
-							);
-						}
-					}
-				}
-			}
-		}
-		*/
 
 		//query the field groups
 		$temp = $this->EE->db->query( '
