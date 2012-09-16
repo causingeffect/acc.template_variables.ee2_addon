@@ -17,7 +17,7 @@ class Template_variables_acc
 {
 	public $name = 'Template Variables';
 	public $id = 'template_variables';
-	public $version = '1.2';
+	public $version = '1.2.1';
 	public $description = 'Shows custom fields, snippets, and global variables';
 	public $sections = array();
 
