@@ -17,7 +17,7 @@ class Template_variables_acc
 {
 	public $name = 'Template Variables';
 	public $id = 'template_variables';
-	public $version = '1.2.1';
+	public $version = '1.2.2';
 	public $description = 'Shows custom fields, snippets, and global variables';
 	public $sections = array();
 
@@ -26,7 +26,7 @@ class Template_variables_acc
 	 */
 	public function __construct()
 	{
-		$this->EE =& get_instance();
+		$this->EE = get_instance();
 		$this->EE->lang->loadfile( 'template_variables' );
 		$this->include_styles_and_scripts();
 	}
@@ -223,7 +223,8 @@ class Template_variables_acc
 		$this->EE->cp->add_js_script( array( 'ui' => array( 'core', 'widget', 'tabs' ) ) );
 
 		//get the theme URL
-		$theme_url = rtrim( $this->EE->config->item( 'theme_folder_url' ), '/' ) . '/third_party/template_variables/';
+		$theme_url =  defined('URL_THIRD_THEMES') ? URL_THIRD_THEMES : $this->EE->config->slash_item('theme_folder_url').'third_party/';
+		$theme_url .= 'template_variables/';
 
 		//add the css to the header
 		$this->EE->cp->add_to_head( '<link rel="stylesheet" type="text/css" href="' . $theme_url . 'css/template_variables.css" />' );
