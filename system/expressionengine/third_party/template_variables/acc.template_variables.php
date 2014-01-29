@@ -17,7 +17,7 @@ class Template_variables_acc
 {
 	public $name = 'Template Variables';
 	public $id = 'template_variables';
-	public $version = '1.2.2';
+	public $version = '1.2.3';
 	public $description = 'Shows custom fields, snippets, and global variables';
 	public $sections = array();
 
@@ -219,6 +219,9 @@ class Template_variables_acc
 	 */
 	protected function include_styles_and_scripts()
 	{
+		// Confirm this is actually being loaded from the CP
+		if (!property_exists($this->EE, 'cp')) { return false; }
+		
 		//load cp jquery files for the tabs functionality
 		$this->EE->cp->add_js_script( array( 'ui' => array( 'core', 'widget', 'tabs' ) ) );
 
