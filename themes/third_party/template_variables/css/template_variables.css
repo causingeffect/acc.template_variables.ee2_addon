@@ -272,10 +272,6 @@ span.arrow {
 	margin-bottom: 20px;
 }
 
-#template_variables .customFieldTable {
-	max-width: 380px;
-}
-
 #template_variables th {
 	background: rgb(21, 28, 33);
 	background: rgba(0, 0, 0, 0.4);
